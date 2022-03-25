@@ -10,4 +10,7 @@ public class OpenFoodApiConfig {
 
     @Value("${openfood.api.data.url}")
     private String staticDataFilesUrl;
+
+    @Value("${openfood.api.data.separator}")
+    private String fileSeparator;
 }

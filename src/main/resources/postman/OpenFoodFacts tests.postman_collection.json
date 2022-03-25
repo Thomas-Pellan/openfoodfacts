@@ -1,0 +1,58 @@
+{
+	"info": {
+		"_postman_id": "8442dac9-2d27-4d6d-9845-067a0f8daccf",
+		"name": "OpenFoodFacts tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Query delta",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/open-food-facts/delta-files",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"open-food-facts",
+						"delta-files"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Import files",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\" : \"WAITING_FOR_IMPORT\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/open-food-facts/import",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"open-food-facts",
+						"import"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

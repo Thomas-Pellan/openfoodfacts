@@ -3,6 +3,7 @@ package fr.pellan.api.openfoodfacts.service;
 import fr.pellan.api.openfoodfacts.config.OpenFoodApiConfig;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
 import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileRepository;
+import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsImportInputDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
 import fr.pellan.api.openfoodfacts.events.OpenFoodFactsFileImportEventPublisher;
 import fr.pellan.api.openfoodfacts.util.QueryUtil;
@@ -34,8 +35,6 @@ public class FileDeltaImporterService {
     @Autowired
     private OpenFoodFactsFileImportEventPublisher openFoodFactsFileImportEventPublisher;
 
-    private static final String OPENFFAPI_FILE_SEPARATOR = "\n";
-
     private static final String INDEX_URL = "index.txt";
 
     private String[] getOpenApiFileList() {
@@ -45,7 +44,7 @@ public class FileDeltaImporterService {
             return null;
         }
 
-        return files.split(OPENFFAPI_FILE_SEPARATOR);
+        return files.split(openFoodApiConfig.getFileSeparator());
     }
 
     public boolean saveOpenFoodFactsFileDelta() {
@@ -82,9 +81,16 @@ public class FileDeltaImporterService {
         return true;
     }
 
-    public boolean importAllFilesWithStatus(OpenFoodFactsFileStatus status){
+    public boolean importAllFilesWithStatus(OpenFoodFactsImportInputDTO input){
 
-        List<OpenFoodFactsFileEntity> files = openFoodFactsFileRepository.findByStatus(status);
+        List<OpenFoodFactsFileEntity> files = new ArrayList<>();
+
+        if(input.getStart() == null || input.getEnd() == null){
+            files = openFoodFactsFileRepository.findByStatus(input.getStatus());
+        } else {
+            files = openFoodFactsFileRepository.findByStatusAndDates(input.getStatus(), input.getStart(), input.getEnd());
+        }
+
         log.info("importAllFilesWithStatus : will trigger {} import file events", files.size());
         if(CollectionUtils.isEmpty(files)){
             return false;
