@@ -1,8 +1,12 @@
 package fr.pellan.api.openfoodfacts.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import fr.pellan.api.openfoodfacts.config.OpenFoodApiConfig;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
 import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileRepository;
+import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsArticleDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
 import fr.pellan.api.openfoodfacts.events.OpenFoodFactsFileImportEvent;
 import fr.pellan.api.openfoodfacts.exception.OpenFoodFactsFileImportException;
@@ -12,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,9 +74,31 @@ public class FileImporterService {
             String fileContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             fileContentList = Arrays.asList(fileContent.split(openFoodApiConfig.getFileSeparator()));
 
+            if(CollectionUtils.isEmpty(fileContentList)){
+                log.warn("{} : empty file", file.getFileName());
+                return;
+            }
         } catch (IOException e) {
-            log.error(String.format("importFile : error while getting %s content, data not imported", file.getFileName()), e);
-            throw new OpenFoodFactsFileImportException("error during file parse");
+            log.error("importFile : error while getting {} content, data not imported", file.getFileName(), e);
+            throw new OpenFoodFactsFileImportException("error during file query or unzip");
         }
+
+        fileContentList.stream().forEach(d -> importOpenFoodFactsData(d));
+    }
+
+    private boolean importOpenFoodFactsData(String strData){
+
+        Gson gson = new GsonBuilder().create();
+        OpenFoodFactsArticleDTO article;
+        try
+        {
+            article = gson.fromJson(strData, OpenFoodFactsArticleDTO.class);
+        }
+        catch(JsonSyntaxException e){
+            log.warn("importOpenFoodFactsData : error while parsing json", e);
+            return false;
+        }
+
+        return true;
     }
 }
