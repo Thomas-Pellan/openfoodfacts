@@ -25,7 +25,7 @@ public class OpenFoodFactsArticleDTO implements Serializable {
     private String brands;
 
     @SerializedName("ecoscore_score")
-    private String ecoScore;
+    private Integer ecoScore;
 
     @SerializedName("nutrient_levels")
     private OpenFoodFactsNutrientLevelsDTO nutrientLevels;
