@@ -6,5 +6,7 @@ public enum OpenFoodFactsFileStatus {
     IMPORT_STARTED,
     IMPORT_FINISHED,
     IMPORT_FAILED,
+    IMPORT_FILE_UNREACHABLE,
+    IMPORT_FILE_EMPTY,
     EMPTY;
 }
