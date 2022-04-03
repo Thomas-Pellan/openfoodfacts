@@ -1,21 +1,42 @@
 package fr.pellan.api.openfoodfacts.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import fr.pellan.api.openfoodfacts.config.OpenFoodApiConfig;
+import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsArticleEntity;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
+import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsIngredientEntity;
+import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsNutrientLevelsEntity;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsArticleRepository;
 import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileRepository;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsIngredientsRepository;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsNutrientLevelsRepository;
+import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsArticleDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
+import fr.pellan.api.openfoodfacts.events.OpenFoodFactsFileImportEvent;
+import fr.pellan.api.openfoodfacts.exception.OpenFoodFactsFileImportException;
+import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsArticleEntityFactory;
+import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsIngredientEntityFactory;
+import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsNutrientLevelsEntityFactory;
 import fr.pellan.api.openfoodfacts.util.QueryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 @Slf4j
 @Service
@@ -30,51 +51,154 @@ public class FileImporterService {
     @Autowired
     private OpenFoodFactsFileRepository openFoodFactsFileRepository;
 
-    private static final String OPENFFAPI_FILE_SEPARATOR = "\n";
+    @Autowired
+    private OpenFoodFactsArticleEntityFactory openFoodFactsArticleEntityFactory;
 
-    private static final String INDEX_URL = "index.txt";
+    @Autowired
+    private OpenFoodFactsArticleRepository openFoodFactsArticleRepository;
 
-    private String[] getOpenApiFileList() {
+    @Autowired
+    private OpenFoodFactsIngredientsRepository openFoodFactsIngredientsRepository;
 
-        String files = queryUtil.getDataAsString(openFoodApiConfig.getStaticDataFilesUrl() + INDEX_URL);
-        if (StringUtils.isBlank(files)) {
-            return null;
+    @Autowired
+    private OpenFoodFactsIngredientEntityFactory openFoodFactsIngredientEntityFactory;
+
+    @Autowired
+    private OpenFoodFactsNutrientLevelsRepository openFoodFactsNutrientLevelsRepository;
+
+    @Autowired
+    private OpenFoodFactsNutrientLevelsEntityFactory openFoodFactsNutrientLevelsEntityFactory;
+
+    @EventListener
+    public void importFileEventListener(OpenFoodFactsFileImportEvent event){
+
+        try {
+            event.getFile().setFileStatus(OpenFoodFactsFileStatus.IMPORT_STARTED);
+            openFoodFactsFileRepository.save(event.getFile());
+
+            importFile(event.getFile());
+
+        } catch(OpenFoodFactsFileImportException e) {
+
+            log.error(e.getMessage(), e);
+
+            event.getFile().setFileStatus(OpenFoodFactsFileStatus.IMPORT_FAILED);
+            openFoodFactsFileRepository.save(event.getFile());
+            return;
         }
 
-        return files.split(OPENFFAPI_FILE_SEPARATOR);
+        event.getFile().setFileStatus(OpenFoodFactsFileStatus.IMPORT_FINISHED);
+        openFoodFactsFileRepository.save(event.getFile());
     }
 
-    public boolean saveOpenFoodFactsFileDelta() {
+    private void importFile(OpenFoodFactsFileEntity file) throws OpenFoodFactsFileImportException {
 
-        String[] fileList = getOpenApiFileList();
-        if(fileList == null) {
+        if(file == null || StringUtils.isBlank(file.getFileName())){
+            throw new OpenFoodFactsFileImportException("empty file or filename, nothimg to query");
+        }
+
+        //Get the file, unzip it and get it's lines
+        List<String> fileContentList = new ArrayList<>();
+        try (InputStream is = new GZIPInputStream(queryUtil.getFileData(openFoodApiConfig.getStaticDataFilesUrl()+ file.getFileName())))
+        {
+            String fileContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            fileContentList = Arrays.asList(fileContent.split(openFoodApiConfig.getFileSeparator()));
+
+            if(CollectionUtils.isEmpty(fileContentList)){
+                log.warn("{} : empty file", file.getFileName());
+                return;
+            }
+        } catch (IOException e) {
+            log.error("importFile : error while getting {} content, data not imported", file.getFileName(), e);
+            throw new OpenFoodFactsFileImportException("error during file query or unzip");
+        }
+
+        fileContentList.stream().forEach(d -> importOpenFoodFactsData(d));
+    }
+
+    private boolean importOpenFoodFactsData(String strData){
+
+        Gson gson = new GsonBuilder().create();
+        OpenFoodFactsArticleDTO articleDto;
+        try
+        {
+            articleDto = gson.fromJson(strData, OpenFoodFactsArticleDTO.class);
+        }
+        catch(JsonSyntaxException e){
+            log.warn("importOpenFoodFactsData : error while parsing json {}", strData, e);
             return false;
         }
 
-        List<OpenFoodFactsFileEntity> files = new ArrayList<>();
-        Arrays.stream(fileList).forEach(f -> {
+        OpenFoodFactsArticleEntity savedArticle = importOpenFoodFactsDataArticle(articleDto);
+        if(savedArticle == null){
+            return false;
+        }
 
-            OpenFoodFactsFileEntity file = openFoodFactsFileRepository.findByFileName(f);
-            if(file != null){
-                return;
-            }
+        importOpenFoodFactsDataNutrients(articleDto, savedArticle);
 
-            file = new OpenFoodFactsFileEntity();
-            file.setFileName(f);
-            file.setFileQueryTime(LocalDateTime.now());
-            file.setFileStatus(OpenFoodFactsFileStatus.WAITING_FOR_IMPORT);
-            files.add(file);
-        });
+        importOpenFoodFactsDataIngredients(articleDto, savedArticle);
 
-        if(!CollectionUtils.isEmpty(files)){
-            try{
-                openFoodFactsFileRepository.saveAll(files);
-            } catch(DataAccessException e){
-                log.error("saveOpenFoodFactsFileDelta : persistence error", e);
-                return false;
-            }
+        return true;
+    }
+
+    private OpenFoodFactsArticleEntity importOpenFoodFactsDataArticle(OpenFoodFactsArticleDTO articleDto){
+
+        OpenFoodFactsArticleEntity article = openFoodFactsArticleRepository.findByOpenFFId(articleDto.getId());
+        article = openFoodFactsArticleEntityFactory.buildOrMergeArticle(articleDto, article);
+        try {
+
+            return openFoodFactsArticleRepository.save(article);
+        } catch (DataAccessException e) {
+            log.debug("importOpenFoodFactsDataArticle : error on article with id {}", articleDto.getId());
+            return null;
+        }
+    }
+
+    private boolean importOpenFoodFactsDataNutrients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article) {
+
+        if(articleDto.getNutrientLevels() == null){
+           return true;
+        }
+
+        OpenFoodFactsNutrientLevelsEntity nutrients = openFoodFactsNutrientLevelsRepository.findByArticleId(article.getId());
+        nutrients = openFoodFactsNutrientLevelsEntityFactory.buildOrMergeNutrient(articleDto.getNutrientLevels(), nutrients);
+        nutrients.setArticle(article);
+        try {
+
+            openFoodFactsNutrientLevelsRepository.save(nutrients);
+        } catch (DataAccessException e) {
+            log.warn("importOpenFoodFactsDataNutrients : error saving data", e);
         }
 
         return true;
+    }
+
+    private boolean importOpenFoodFactsDataIngredients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article){
+
+        if(CollectionUtils.isEmpty(articleDto.getIngredients()) || article == null){
+            return true;
+        }
+
+        List<OpenFoodFactsIngredientEntity> ingredients = new ArrayList<>();
+
+        articleDto.getIngredients().stream().forEach(i -> {
+            OpenFoodFactsIngredientEntity ingredient = openFoodFactsIngredientsRepository.findByOpenFFId(i.getId());
+            ingredient = openFoodFactsIngredientEntityFactory.buildOrMergeIngredient(i, ingredient);
+            ingredient.setArticle(article);
+            ingredients.add(ingredient);
+        });
+
+        //Remove duplicated ids
+        HashSet<Object> seen=new HashSet<>();
+        ingredients.removeIf(e->!seen.add(e.getId()));
+
+        try {
+
+            openFoodFactsIngredientsRepository.saveAll(ingredients);
+        } catch (DataAccessException e) {
+            log.warn("importOpenFoodFactsDataIngredients : error saving data", e);
+        }
+
+        return false;
     }
 }
