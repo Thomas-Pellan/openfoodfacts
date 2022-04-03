@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import fr.pellan.api.openfoodfacts.config.OpenFoodApiConfig;
+import fr.pellan.api.openfoodfacts.config.OpenFoodBusinessConfig;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsArticleEntity;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsIngredientEntity;
@@ -16,6 +17,7 @@ import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsArticleDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
 import fr.pellan.api.openfoodfacts.events.OpenFoodFactsFileImportEvent;
 import fr.pellan.api.openfoodfacts.exception.OpenFoodFactsFileImportException;
+import fr.pellan.api.openfoodfacts.exception.QueryUtilException;
 import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsArticleEntityFactory;
 import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsIngredientEntityFactory;
 import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsNutrientLevelsEntityFactory;
@@ -46,6 +48,9 @@ public class FileImporterService {
     private OpenFoodApiConfig openFoodApiConfig;
 
     @Autowired
+    private OpenFoodBusinessConfig openFoodBusinessConfig;
+
+    @Autowired
     private QueryUtil queryUtil;
 
     @Autowired
@@ -72,11 +77,12 @@ public class FileImporterService {
     @EventListener
     public void importFileEventListener(OpenFoodFactsFileImportEvent event){
 
+        OpenFoodFactsFileStatus status;
         try {
             event.getFile().setFileStatus(OpenFoodFactsFileStatus.IMPORT_STARTED);
             openFoodFactsFileRepository.save(event.getFile());
 
-            importFile(event.getFile());
+            status = importFile(event.getFile());
 
         } catch(OpenFoodFactsFileImportException e) {
 
@@ -87,18 +93,18 @@ public class FileImporterService {
             return;
         }
 
-        event.getFile().setFileStatus(OpenFoodFactsFileStatus.IMPORT_FINISHED);
+        event.getFile().setFileStatus(status);
         openFoodFactsFileRepository.save(event.getFile());
     }
 
-    private void importFile(OpenFoodFactsFileEntity file) throws OpenFoodFactsFileImportException {
+    private OpenFoodFactsFileStatus importFile(OpenFoodFactsFileEntity file) throws OpenFoodFactsFileImportException {
 
         if(file == null || StringUtils.isBlank(file.getFileName())){
             throw new OpenFoodFactsFileImportException("empty file or filename, nothimg to query");
         }
 
         //Get the file, unzip it and get it's lines
-        List<String> fileContentList = new ArrayList<>();
+        List<String> fileContentList;
         try (InputStream is = new GZIPInputStream(queryUtil.getFileData(openFoodApiConfig.getStaticDataFilesUrl()+ file.getFileName())))
         {
             String fileContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -106,14 +112,21 @@ public class FileImporterService {
 
             if(CollectionUtils.isEmpty(fileContentList)){
                 log.warn("{} : empty file", file.getFileName());
-                return;
+                return OpenFoodFactsFileStatus.IMPORT_FILE_EMPTY;
             }
         } catch (IOException e) {
+
             log.error("importFile : error while getting {} content, data not imported", file.getFileName(), e);
             throw new OpenFoodFactsFileImportException("error during file query or unzip");
+        } catch (QueryUtilException e) {
+
+            log.warn("importFile : file {} was unreachable (last query date : {})", file.getFileName(), file.getFileQueryTime().toString());
+            return OpenFoodFactsFileStatus.IMPORT_FILE_UNREACHABLE;
         }
 
         fileContentList.stream().forEach(d -> importOpenFoodFactsData(d));
+
+        return OpenFoodFactsFileStatus.IMPORT_FINISHED;
     }
 
     private boolean importOpenFoodFactsData(String strData){
@@ -145,11 +158,17 @@ public class FileImporterService {
 
         OpenFoodFactsArticleEntity article = openFoodFactsArticleRepository.findByOpenFFId(articleDto.getId());
         article = openFoodFactsArticleEntityFactory.buildOrMergeArticle(articleDto, article);
+
+        //Drop articles with empty names if asked to avoid dirty data
+        if(Boolean.FALSE.equals(openFoodBusinessConfig.getImportEmpty()) && StringUtils.isBlank(article.getProductName())){
+            return null;
+        }
+
         try {
 
             return openFoodFactsArticleRepository.save(article);
         } catch (DataAccessException e) {
-            log.debug("importOpenFoodFactsDataArticle : error on article with id {}", articleDto.getId());
+            log.warn("importOpenFoodFactsDataArticle : error on article with id {}", articleDto.getId());
             return null;
         }
     }
