@@ -27,8 +27,10 @@ public class OpenFoodFactsArticleEntityFactory {
         entity.setOpenFoodFactsId(dto.getId());
 
         Long unixCreated = Long.parseLong(dto.getCreated());
-        entity.setCreationDate(LocalDateTime.ofInstant(Instant.ofEpochMilli(unixCreated),
-                TimeZone.getDefault().toZoneId()));
+        if(unixCreated != null){
+            entity.setCreationDate(LocalDateTime.ofInstant(Instant.ofEpochSecond(unixCreated),
+                    TimeZone.getDefault().toZoneId()));
+        }
 
         entity.setEcoScore(dto.getEcoScore());
         entity.setIngredientsNb(dto.getIngredientsNb());

@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class OpenFoodBusinessConfig {
 
-    @Value("${openfood.import.empty}")
-    private Boolean importEmpty;
+    @Value("${openfood.import.empty.articles}")
+    private Boolean importEmptyArticles;
+
+    @Value("${openfood.import.empty.nutrients}")
+    private Boolean importEmptyNutrients;
 }

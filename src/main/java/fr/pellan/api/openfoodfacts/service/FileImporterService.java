@@ -27,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
-import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -160,7 +159,7 @@ public class FileImporterService {
         article = openFoodFactsArticleEntityFactory.buildOrMergeArticle(articleDto, article);
 
         //Drop articles with empty names if asked to avoid dirty data
-        if(Boolean.FALSE.equals(openFoodBusinessConfig.getImportEmpty()) && StringUtils.isBlank(article.getProductName())){
+        if(Boolean.FALSE.equals(openFoodBusinessConfig.getImportEmptyArticles()) && StringUtils.isBlank(article.getProductName())){
             return null;
         }
 
@@ -175,18 +174,20 @@ public class FileImporterService {
 
     private boolean importOpenFoodFactsDataNutrients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article) {
 
-        if(articleDto.getNutrientLevels() == null){
-           return true;
+        if(articleDto.getNutrientLevels() == null || (Boolean.FALSE.equals(openFoodBusinessConfig.getImportEmptyNutrients()) && articleDto.getNutrientLevels().isEmpty())){
+           return false;
         }
 
         OpenFoodFactsNutrientLevelsEntity nutrients = openFoodFactsNutrientLevelsRepository.findByArticleId(article.getId());
         nutrients = openFoodFactsNutrientLevelsEntityFactory.buildOrMergeNutrient(articleDto.getNutrientLevels(), nutrients);
         nutrients.setArticle(article);
+
         try {
 
             openFoodFactsNutrientLevelsRepository.save(nutrients);
         } catch (DataAccessException e) {
             log.warn("importOpenFoodFactsDataNutrients : error saving data", e);
+            return false;
         }
 
         return true;
@@ -201,7 +202,7 @@ public class FileImporterService {
         List<OpenFoodFactsIngredientEntity> ingredients = new ArrayList<>();
 
         articleDto.getIngredients().stream().forEach(i -> {
-            OpenFoodFactsIngredientEntity ingredient = openFoodFactsIngredientsRepository.findByOpenFFId(i.getId());
+            OpenFoodFactsIngredientEntity ingredient = openFoodFactsIngredientsRepository.findByOpenFFIdAndArticle(i.getId(), article);
             ingredient = openFoodFactsIngredientEntityFactory.buildOrMergeIngredient(i, ingredient);
             ingredient.setArticle(article);
             ingredients.add(ingredient);
@@ -209,7 +210,7 @@ public class FileImporterService {
 
         //Remove duplicated ids
         HashSet<Object> seen=new HashSet<>();
-        ingredients.removeIf(e->!seen.add(e.getId()));
+        ingredients.removeIf(e->!seen.add(e.getOpenFoodFactsId()));
 
         try {
 
