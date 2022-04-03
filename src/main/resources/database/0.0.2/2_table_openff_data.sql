@@ -9,7 +9,7 @@ CREATE TABLE openfoodfacts.article
     ecoscore INT DEFAULT NULL,
     PRIMARY KEY (id),
     UNIQUE (remote_id)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE openfoodfacts.nutrient_levels
 (
@@ -22,7 +22,7 @@ CREATE TABLE openfoodfacts.nutrient_levels
     PRIMARY KEY (id),
     UNIQUE (id_article),
     FOREIGN KEY fk_nutrient_article(id_article) references openfoodfacts.article(id)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE openfoodfacts.ingredient
 (
@@ -37,5 +37,4 @@ CREATE TABLE openfoodfacts.ingredient
     PRIMARY KEY (id),
     CONSTRAINT uk_ingredient UNIQUE (id_article, remote_id),
     FOREIGN KEY fk_ingredient_article(id_article) references openfoodfacts.article(id)
-);
-
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

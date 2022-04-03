@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -124,7 +125,7 @@ public class FileImporterService {
             articleDto = gson.fromJson(strData, OpenFoodFactsArticleDTO.class);
         }
         catch(JsonSyntaxException e){
-            log.warn("importOpenFoodFactsData : error while parsing json", e);
+            log.warn("importOpenFoodFactsData : error while parsing json {}", strData, e);
             return false;
         }
 
@@ -148,9 +149,9 @@ public class FileImporterService {
 
             return openFoodFactsArticleRepository.save(article);
         } catch (DataAccessException e) {
-            log.warn("importOpenFoodFactsDataArticle : error saving data", e);
+            log.debug("importOpenFoodFactsDataArticle : error on article with id {}", articleDto.getId());
+            return null;
         }
-        return null;
     }
 
     private boolean importOpenFoodFactsDataNutrients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article) {
@@ -174,11 +175,12 @@ public class FileImporterService {
 
     private boolean importOpenFoodFactsDataIngredients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article){
 
-        if(CollectionUtils.isEmpty(articleDto.getIngredients())){
+        if(CollectionUtils.isEmpty(articleDto.getIngredients()) || article == null){
             return true;
         }
 
         List<OpenFoodFactsIngredientEntity> ingredients = new ArrayList<>();
+
         articleDto.getIngredients().stream().forEach(i -> {
             OpenFoodFactsIngredientEntity ingredient = openFoodFactsIngredientsRepository.findByOpenFFId(i.getId());
             ingredient = openFoodFactsIngredientEntityFactory.buildOrMergeIngredient(i, ingredient);

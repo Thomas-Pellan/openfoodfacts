@@ -14,7 +14,7 @@ public class OpenFoodFactsIngredientEntity {
     @Column(name = "id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "id_article")
     private OpenFoodFactsArticleEntity article;
 
