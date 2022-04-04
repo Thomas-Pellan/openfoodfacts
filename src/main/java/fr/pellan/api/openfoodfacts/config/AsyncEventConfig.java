@@ -1,27 +1,37 @@
 package fr.pellan.api.openfoodfacts.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.ApplicationEventMulticaster;
-import org.springframework.context.event.SimpleApplicationEventMulticaster;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.Executor;
+
+@EnableAsync
 @Configuration
-public class AsyncEventConfig {
+public class AsyncEventConfig implements AsyncConfigurer {
 
     @Value(value = "${spring.max.concurrent.threads}")
     private int nbConcurrentThreads;
 
-    @Bean(name = "applicationEventMulticaster")
-    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
-        SimpleApplicationEventMulticaster eventMulticaster =
-                new SimpleApplicationEventMulticaster();
+    @Value(value = "${spring.max.concurrent.pool.size}")
+    private int poolSize;
 
-        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor();
-        executor.setConcurrencyLimit(nbConcurrentThreads);
+    @Value(value = "${spring.max.concurrent.queue.size}")
+    private int queueSize;
 
-        eventMulticaster.setTaskExecutor(executor);
-        return eventMulticaster;
+    @Override
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(nbConcurrentThreads);
+        executor.setMaxPoolSize(poolSize);
+        executor.setQueueCapacity(queueSize);
+
+        executor.setThreadNamePrefix("OpenFoodFacts-executor-");
+        executor.initialize();
+
+        return executor;
     }
 }

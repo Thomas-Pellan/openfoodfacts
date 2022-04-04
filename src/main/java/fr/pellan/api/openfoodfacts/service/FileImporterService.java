@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataAccessException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -75,6 +76,7 @@ public class FileImporterService {
     @Autowired
     private OpenFoodFactsFileImportEntityFactory openFoodFactsFileImportEntityFactory;
 
+    @Async
     @EventListener
     public void importFileEventListener(OpenFoodFactsFileImportEvent event){
 
