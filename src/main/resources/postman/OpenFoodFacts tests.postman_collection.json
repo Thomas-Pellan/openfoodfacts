@@ -32,7 +32,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/open-food-facts/file-import/status?fileImportId=82",
+					"raw": "http://localhost:8080/open-food-facts/file-import/status?fileImportId=27",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -46,7 +46,7 @@
 					"query": [
 						{
 							"key": "fileImportId",
-							"value": "82"
+							"value": "27"
 						}
 					]
 				}
@@ -59,7 +59,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/open-food-facts/file-import/last-status?fileId=21",
+					"raw": "http://localhost:8080/open-food-facts/file-import/last-status?fileId=27",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -73,7 +73,7 @@
 					"query": [
 						{
 							"key": "fileId",
-							"value": "21"
+							"value": "27"
 						}
 					]
 				}
@@ -162,6 +162,26 @@
 						"open-food-facts",
 						"files",
 						"find"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actuator",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/actuator/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"actuator",
+						"health"
 					]
 				}
 			},

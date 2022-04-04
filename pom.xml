@@ -11,8 +11,8 @@
 
 	<groupId>fr.pellan.api</groupId>
 	<artifactId>openfoodfacts</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>openfoodfacts</name>
 	<description>Open food facts connector and api</description>
 

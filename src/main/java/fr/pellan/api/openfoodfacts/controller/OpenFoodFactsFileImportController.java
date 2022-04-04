@@ -1,7 +1,6 @@
 package fr.pellan.api.openfoodfacts.controller;
 
 import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsFileImportDTO;
-import fr.pellan.api.openfoodfacts.service.FileDeltaImporterService;
 import fr.pellan.api.openfoodfacts.service.FileImportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
