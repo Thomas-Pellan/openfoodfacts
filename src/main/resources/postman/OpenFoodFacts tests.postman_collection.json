@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "8442dac9-2d27-4d6d-9845-067a0f8daccf",
+		"_postman_id": "d4f0807e-95d3-4143-9918-36c83b611b80",
 		"name": "OpenFoodFacts tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -11,7 +11,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/open-food-facts/delta-files",
+					"raw": "http://localhost:8080/open-food-facts/files/delta",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -19,7 +19,89 @@
 					"port": "8080",
 					"path": [
 						"open-food-facts",
-						"delta-files"
+						"files",
+						"delta"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "File import status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/open-food-facts/file-import/status?fileImportId=82",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"open-food-facts",
+						"file-import",
+						"status"
+					],
+					"query": [
+						{
+							"key": "fileImportId",
+							"value": "82"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "File import last status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/open-food-facts/file-import/last-status?fileId=21",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"open-food-facts",
+						"file-import",
+						"last-status"
+					],
+					"query": [
+						{
+							"key": "fileId",
+							"value": "21"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "File import status history",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/open-food-facts/file-import/status-history?fileId=21",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"open-food-facts",
+						"file-import",
+						"status-history"
+					],
+					"query": [
+						{
+							"key": "fileId",
+							"value": "21"
+						}
 					]
 				}
 			},
@@ -40,7 +122,7 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/open-food-facts/import",
+					"raw": "http://localhost:8080/open-food-facts/files/import",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -48,7 +130,38 @@
 					"port": "8080",
 					"path": [
 						"open-food-facts",
+						"files",
 						"import"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "find files",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\" : \"WAITING_FOR_IMPORT\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/open-food-facts/files/find",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"open-food-facts",
+						"files",
+						"find"
 					]
 				}
 			},

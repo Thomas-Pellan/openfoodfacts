@@ -4,13 +4,16 @@ import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileImportEntity;
 import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileImportRepository;
 import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileRepository;
+import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsFileImportDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
+import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsFileImportDTOFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -21,6 +24,9 @@ public class FileImportService {
 
     @Autowired
     private OpenFoodFactsFileImportRepository openFoodFactsFileImportRepository;
+
+    @Autowired
+    private OpenFoodFactsFileImportDTOFactory openFoodFactsFileImportDTOFactory;
 
     public OpenFoodFactsFileImportEntity startImport(OpenFoodFactsFileEntity file, OpenFoodFactsFileImportEntity fileImport) {
 
@@ -72,5 +78,20 @@ public class FileImportService {
         importData.setNbIngredients(importData.getNbIngredients() + nbIngredients);
 
         openFoodFactsFileImportRepository.save(importData);
+    }
+
+    public OpenFoodFactsFileImportDTO findById(Long id) {
+
+        return openFoodFactsFileImportDTOFactory.buildFileImportDto(openFoodFactsFileImportRepository.findById(id).orElse(null));
+    }
+
+    public OpenFoodFactsFileImportDTO findLastByFileId(Long fileId) {
+
+        return openFoodFactsFileImportDTOFactory.buildFileImportDto(openFoodFactsFileImportRepository.findByFileId(fileId).get(0));
+    }
+
+    public List<OpenFoodFactsFileImportDTO> findByFileId(Long fileId) {
+
+        return openFoodFactsFileImportDTOFactory.buildFileImportDtos(openFoodFactsFileImportRepository.findByFileId(fileId));
     }
 }

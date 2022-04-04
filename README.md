@@ -11,6 +11,7 @@
 - 0.0.1 : Spring/Maven project setup
 - 0.0.2 : OpenFoodFacts delta file query and file info persisted
 - 0.0.3 : BugFixes, adding file import feedback
+- 0.0.4 : Improving controllers on file import trigger and feedback
 
 ### Doc - Tests
 

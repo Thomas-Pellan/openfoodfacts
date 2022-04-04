@@ -3,9 +3,11 @@ package fr.pellan.api.openfoodfacts.service;
 import fr.pellan.api.openfoodfacts.config.OpenFoodApiConfig;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
 import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileRepository;
+import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsFileDTO;
 import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsImportInputDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
 import fr.pellan.api.openfoodfacts.events.OpenFoodFactsFileImportEventPublisher;
+import fr.pellan.api.openfoodfacts.factory.OpenFoodFactsFileDTOFactory;
 import fr.pellan.api.openfoodfacts.util.QueryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +35,9 @@ public class FileDeltaImporterService {
     private OpenFoodFactsFileRepository openFoodFactsFileRepository;
 
     @Autowired
+    private OpenFoodFactsFileDTOFactory openFoodFactsFileDTOFactory;
+
+    @Autowired
     private OpenFoodFactsFileImportEventPublisher openFoodFactsFileImportEventPublisher;
 
     private static final String INDEX_URL = "index.txt";
@@ -47,14 +52,14 @@ public class FileDeltaImporterService {
         return files.split(openFoodApiConfig.getFileSeparator());
     }
 
-    public boolean saveOpenFoodFactsFileDelta() {
+    public List<OpenFoodFactsFileDTO> saveOpenFoodFactsFileDelta() {
 
         String[] fileList = getOpenApiFileList();
         if(fileList == null) {
-            return false;
+            return new ArrayList<>();
         }
 
-        List<OpenFoodFactsFileEntity> files = new ArrayList<>();
+        final List<OpenFoodFactsFileEntity> files = new ArrayList<>();
         Arrays.stream(fileList).forEach(f -> {
 
             OpenFoodFactsFileEntity file = openFoodFactsFileRepository.findByFileName(f);
@@ -69,21 +74,27 @@ public class FileDeltaImporterService {
             files.add(file);
         });
 
+        List<OpenFoodFactsFileEntity> persistedFiles = new ArrayList<>();
         if(!CollectionUtils.isEmpty(files)){
             try{
-                openFoodFactsFileRepository.saveAll(files);
+                persistedFiles = (List<OpenFoodFactsFileEntity>) openFoodFactsFileRepository.saveAll(files);
             } catch(DataAccessException e){
                 log.error("saveOpenFoodFactsFileDelta : persistence error", e);
-                return false;
+                return new ArrayList<>();
             }
         }
 
-        return true;
+        return openFoodFactsFileDTOFactory.buildFileDtos(persistedFiles);
     }
 
-    public boolean importAllFilesWithStatus(OpenFoodFactsImportInputDTO input){
+    public List<OpenFoodFactsFileDTO> findOpenFoodFactsFiles(OpenFoodFactsImportInputDTO input){
 
-        List<OpenFoodFactsFileEntity> files = new ArrayList<>();
+        return openFoodFactsFileDTOFactory.buildFileDtos(findFiles(input));
+    }
+
+    private List<OpenFoodFactsFileEntity> findFiles(OpenFoodFactsImportInputDTO input){
+
+        List<OpenFoodFactsFileEntity> files;
 
         if(input.getStart() == null || input.getEnd() == null){
             files = openFoodFactsFileRepository.findByStatus(input.getStatus());
@@ -91,13 +102,15 @@ public class FileDeltaImporterService {
             files = openFoodFactsFileRepository.findByStatusAndDates(input.getStatus(), input.getStart(), input.getEnd());
         }
 
-        log.info("importAllFilesWithStatus : will trigger {} import file events", files.size());
-        if(CollectionUtils.isEmpty(files)){
-            return false;
-        }
+        return files;
+    }
+
+    public List<OpenFoodFactsFileDTO> importAllFilesWithStatus(OpenFoodFactsImportInputDTO input){
+
+        List<OpenFoodFactsFileEntity> files = findFiles(input);
 
         files.stream().forEach(f -> openFoodFactsFileImportEventPublisher.publishImportFileEvent(f));
 
-        return true;
+        return openFoodFactsFileDTOFactory.buildFileDtos(files);
     }
 }
