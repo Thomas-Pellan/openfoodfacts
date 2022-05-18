@@ -13,6 +13,8 @@
 - 0.0.3 : BugFixes, adding file import feedback
 - 0.0.4 : Improving controllers on file import trigger and feedback
 - 1.0.0 : Simple docker packaging for the spring app, still needs a mysql running locally
+- 1.0.1 : Adding documentation, adding swagger doc
+
 
 ### Installation
 
@@ -27,6 +29,6 @@
 - execute startup.sh script
 
 This will package the latest version, and create a docker container to start it. 
-Once started, the app should be accessible at http://localhost:8080/actuator/health
+Once started, the app should be accessible at http://localhost:8080/swagger-ui/index.html
 
 
