@@ -5,6 +5,9 @@ import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileImportEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * Factory building file import data entities.
+ */
 @Slf4j
 @Service
 public class OpenFoodFactsFileImportEntityFactory {

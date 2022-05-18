@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * The openfoodfacts import process data dto.
+ */
 @Data
 public class OpenFoodFactsFileImportDTO {
 

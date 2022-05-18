@@ -12,13 +12,22 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+/**
+ * Class handling http queries.
+ */
 @Slf4j
 @Service
 public class QueryUtil {
 
     private static final String USER_AGENT = "User-Agent-wrapper - Linux - 1.0";
 
-    public String getDataAsString(String url){
+    /**
+     * Does a http get on the target url and sends back the response as a string.
+     * @param url the target url to hit
+     * @return the response sting
+     * @throws QueryUtilException in case the request fails or does not get a 200 ok response
+     */
+    public String getDataAsString(String url) throws QueryUtilException {
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -43,7 +52,13 @@ public class QueryUtil {
         return response.body();
     }
 
-    public InputStream getFileData(String url){
+    /***
+     * Does a http get on the target url and sends back the response body as an Input stream.
+     * @param url the target url to hit
+     * @return the body of the http response as an input stream
+     * @throws QueryUtilException if the request fails in any way
+     */
+    public InputStream getFileData(String url) throws QueryUtilException{
 
         //Query and get the file from the API
         HttpClient client = HttpClient.newHttpClient();

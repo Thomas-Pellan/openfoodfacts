@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * The file repo.
+ */
 @Repository
 public interface OpenFoodFactsFileRepository extends CrudRepository<OpenFoodFactsFileEntity, Integer> {
 

@@ -6,7 +6,10 @@ import com.google.gson.JsonSyntaxException;
 import fr.pellan.api.openfoodfacts.config.OpenFoodApiConfig;
 import fr.pellan.api.openfoodfacts.config.OpenFoodBusinessConfig;
 import fr.pellan.api.openfoodfacts.db.entity.*;
-import fr.pellan.api.openfoodfacts.db.repository.*;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsArticleRepository;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsFileImportRepository;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsIngredientsRepository;
+import fr.pellan.api.openfoodfacts.db.repository.OpenFoodFactsNutrientLevelsRepository;
 import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsArticleDTO;
 import fr.pellan.api.openfoodfacts.enumeration.OpenFoodFactsFileStatus;
 import fr.pellan.api.openfoodfacts.events.OpenFoodFactsFileImportEvent;
@@ -29,13 +32,16 @@ import org.springframework.util.CollectionUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+/**
+ * This class handles the logic to import one single open food facts file data into the database,
+ * and updating the import process during it.
+ */
 @Slf4j
 @Service
 public class FileImporterService {
@@ -76,6 +82,10 @@ public class FileImporterService {
     @Autowired
     private OpenFoodFactsFileImportEntityFactory openFoodFactsFileImportEntityFactory;
 
+    /**
+     * Async event, used to trigger a file import using file data.
+     * @param event the data of the file to import.
+     */
     @Async
     @EventListener
     public void importFileEventListener(OpenFoodFactsFileImportEvent event){
@@ -99,10 +109,17 @@ public class FileImporterService {
         fileImportService.endImport(event.getFile(), importData, status);
     }
 
+    /**
+     * Imports a file from the open food fact API into the local database.
+     * @param file the file to import
+     * @param importData the import process data
+     * @return a file status describing how the import process ended
+     * @throws OpenFoodFactsFileImportException in case the data isn't correct or import fails
+     */
     private OpenFoodFactsFileStatus importFile(OpenFoodFactsFileEntity file, OpenFoodFactsFileImportEntity importData) throws OpenFoodFactsFileImportException {
 
         if(file == null || StringUtils.isBlank(file.getFileName())){
-            throw new OpenFoodFactsFileImportException("empty file or filename, nothimg to query");
+            throw new OpenFoodFactsFileImportException("empty file or filename, nothing to query");
         }
 
         //Get the file, unzip it and get it's lines
@@ -134,6 +151,11 @@ public class FileImporterService {
         return OpenFoodFactsFileStatus.IMPORT_FINISHED;
     }
 
+    /**
+     * Extracts the openfoodfacts data out of a file line.
+     * @param strData a file line containing openfoodfacts article
+     * @param importData the import process data
+     */
     private void importOpenFoodFactsData(String strData, OpenFoodFactsFileImportEntity importData){
 
         Gson gson = new GsonBuilder().create();
@@ -163,6 +185,11 @@ public class FileImporterService {
         fileImportService.incrementNbLinesImported(importData);
     }
 
+    /**
+     * Extracts the wanted article info out of an openfoodfacts dto article.
+     * @param articleDto the dto containing info to store
+     * @return an article entity that has been persisted, or null if a problem occured
+     */
     private OpenFoodFactsArticleEntity importOpenFoodFactsDataArticle(OpenFoodFactsArticleDTO articleDto){
 
         OpenFoodFactsArticleEntity article = openFoodFactsArticleRepository.findByOpenFFId(articleDto.getId());
@@ -182,6 +209,12 @@ public class FileImporterService {
         }
     }
 
+    /**
+     * Extracts the nutrient information out of an openfoodfacts dto.
+     * @param articleDto the target dto where the info is stored
+     * @param article the target article to link this nutrient info in out database
+     * @return a boolean if an error occured
+     */
     private boolean importOpenFoodFactsDataNutrients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article) {
 
         if(articleDto.getNutrientLevels() == null || (Boolean.FALSE.equals(openFoodBusinessConfig.getImportEmptyNutrients()) && articleDto.getNutrientLevels().isEmpty())){
@@ -203,6 +236,12 @@ public class FileImporterService {
         return true;
     }
 
+    /**
+     * Extracts the ingredient data from an openfoodfacts dto.
+     * @param articleDto the target articledto where the info is stored
+     * @param article the article to link ingredients with
+     * @return the number of ingredients extracted from the dto (removing duplicates)
+     */
     private int importOpenFoodFactsDataIngredients(OpenFoodFactsArticleDTO articleDto, OpenFoodFactsArticleEntity article){
 
         if(CollectionUtils.isEmpty(articleDto.getIngredients()) || article == null){

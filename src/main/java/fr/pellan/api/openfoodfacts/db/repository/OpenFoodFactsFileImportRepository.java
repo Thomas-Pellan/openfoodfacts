@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * The file import repo.
+ */
 @Repository
 public interface OpenFoodFactsFileImportRepository extends CrudRepository<OpenFoodFactsFileImportEntity, Long> {
 

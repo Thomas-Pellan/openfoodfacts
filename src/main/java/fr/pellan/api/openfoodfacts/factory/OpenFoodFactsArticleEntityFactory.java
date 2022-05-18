@@ -9,10 +9,19 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;
 
+/**
+ * Factory building article entities from openfoodfacts article dto.
+ */
 @Slf4j
 @Service
 public class OpenFoodFactsArticleEntityFactory {
 
+    /**
+     * Builds a new entity or merges and exitsing one with the given dto data.
+     * @param dto the new dto containing data
+     * @param old the existing article in the database
+     * @return an new article or updated article object
+     */
     public OpenFoodFactsArticleEntity buildOrMergeArticle(OpenFoodFactsArticleDTO dto, OpenFoodFactsArticleEntity old){
 
         if(dto == null){

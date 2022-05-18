@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+/**
+ * The Ingredient entity.
+ */
 @Data
 @Entity
 @Table(name = "ingredient", schema = "openfoodfacts")

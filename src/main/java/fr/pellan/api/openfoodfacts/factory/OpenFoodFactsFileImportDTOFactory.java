@@ -1,8 +1,6 @@
 package fr.pellan.api.openfoodfacts.factory;
 
-import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileEntity;
 import fr.pellan.api.openfoodfacts.db.entity.OpenFoodFactsFileImportEntity;
-import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsFileDTO;
 import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsFileImportDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,6 +9,9 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Factory building file import data dtos from file import entities.
+ */
 @Slf4j
 @Service
 public class OpenFoodFactsFileImportDTOFactory {

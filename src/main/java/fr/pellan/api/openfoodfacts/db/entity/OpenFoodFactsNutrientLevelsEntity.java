@@ -1,10 +1,12 @@
 package fr.pellan.api.openfoodfacts.db.entity;
 
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 
+/**
+ * The Nutrient entity.
+ */
 @Data
 @Entity
 @Table(name = "nutrient_levels", schema = "openfoodfacts")

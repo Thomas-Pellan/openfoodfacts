@@ -5,6 +5,9 @@ import lombok.Data;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * The Article entity.
+ */
 @Data
 @Entity
 @Table(name = "article", schema = "openfoodfacts")

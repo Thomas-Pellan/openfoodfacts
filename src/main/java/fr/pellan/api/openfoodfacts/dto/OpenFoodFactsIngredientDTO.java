@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * The openfoodfacts api ingredient dto.
+ */
 @Data
 public class OpenFoodFactsIngredientDTO implements Serializable {
 

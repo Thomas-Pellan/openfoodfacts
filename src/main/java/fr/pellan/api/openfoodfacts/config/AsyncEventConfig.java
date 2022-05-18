@@ -8,6 +8,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
+/**
+ * Configuration of the event queue for the import file event.
+ */
 @EnableAsync
 @Configuration
 public class AsyncEventConfig implements AsyncConfigurer {

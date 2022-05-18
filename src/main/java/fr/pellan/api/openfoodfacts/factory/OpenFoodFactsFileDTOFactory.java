@@ -9,6 +9,9 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Factory building file dtos from file entities.
+ */
 @Slf4j
 @Service
 public class OpenFoodFactsFileDTOFactory {

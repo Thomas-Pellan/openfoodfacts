@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Dto used to store user criterias to search for file data.
+ */
 @Data
 public class OpenFoodFactsImportInputDTO {
 

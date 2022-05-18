@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This class handles the import of the index of delta openfoodfacts article files.
+ */
 @Slf4j
 @Service
 public class FileDeltaImporterService {
@@ -42,6 +45,10 @@ public class FileDeltaImporterService {
 
     private static final String INDEX_URL = "index.txt";
 
+    /***
+     * Gets the list of available openfoodfacts files from the openfoodfacts api.
+     * @return a list of openfoodfacts file names
+     */
     private String[] getOpenApiFileList() {
 
         String files = queryUtil.getDataAsString(openFoodApiConfig.getStaticDataFilesUrl() + INDEX_URL);
@@ -52,6 +59,10 @@ public class FileDeltaImporterService {
         return files.split(openFoodApiConfig.getFileSeparator());
     }
 
+    /***
+     * Persists the list of available openfoodfacts files into the database for future import.
+     * @return a liste of file dtos containing the files info
+     */
     public List<OpenFoodFactsFileDTO> saveOpenFoodFactsFileDelta() {
 
         String[] fileList = getOpenApiFileList();
@@ -87,11 +98,21 @@ public class FileDeltaImporterService {
         return openFoodFactsFileDTOFactory.buildFileDtos(persistedFiles);
     }
 
+    /**
+     * Gets all files stored in the database using the provided criterias.
+     * @param input the search criterias
+     * @return a list of file info dtos
+     */
     public List<OpenFoodFactsFileDTO> findOpenFoodFactsFiles(OpenFoodFactsImportInputDTO input){
 
         return openFoodFactsFileDTOFactory.buildFileDtos(findFiles(input));
     }
 
+    /**
+     * Gets all files stored in the database using the provided criterias.
+     * @param input the search criterias
+     * @return a list of file info entities
+     */
     private List<OpenFoodFactsFileEntity> findFiles(OpenFoodFactsImportInputDTO input){
 
         List<OpenFoodFactsFileEntity> files;
@@ -105,6 +126,11 @@ public class FileDeltaImporterService {
         return files;
     }
 
+    /**
+     * Publishes events to trigger an import on the targeted files using criteria.
+     * @param input the criterias wanted to trigger file import
+     * @return a list of files which will be imported
+     */
     public List<OpenFoodFactsFileDTO> importAllFilesWithStatus(OpenFoodFactsImportInputDTO input){
 
         List<OpenFoodFactsFileEntity> files = findFiles(input);

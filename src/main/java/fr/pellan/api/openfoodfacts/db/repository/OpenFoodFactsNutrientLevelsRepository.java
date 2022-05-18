@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+/**
+ * The nutrient repo.
+ */
 @Repository
 public interface OpenFoodFactsNutrientLevelsRepository extends CrudRepository<OpenFoodFactsNutrientLevelsEntity, Integer> {
 

@@ -5,6 +5,9 @@ import fr.pellan.api.openfoodfacts.dto.OpenFoodFactsIngredientDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+/**
+ * Factory building ingredient entities from openfoodfacts dtos.
+ */
 @Slf4j
 @Service
 public class OpenFoodFactsIngredientEntityFactory {

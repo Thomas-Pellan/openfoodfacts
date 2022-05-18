@@ -6,6 +6,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 
+/**
+ * The openfoodfacts api nutrient dto.
+ */
 @Data
 public class OpenFoodFactsNutrientLevelsDTO implements Serializable {
 

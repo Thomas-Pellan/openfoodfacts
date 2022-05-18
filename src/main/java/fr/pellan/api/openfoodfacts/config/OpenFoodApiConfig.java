@@ -4,6 +4,9 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * Openfoodfacts API data used to query it.
+ */
 @Getter
 @Component
 public class OpenFoodApiConfig {

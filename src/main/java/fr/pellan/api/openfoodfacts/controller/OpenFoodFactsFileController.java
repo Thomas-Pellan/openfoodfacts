@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller exposing data of openfoodfacts files and triggering file import.
+ */
 @Slf4j
 @RestController
 @RequestMapping("open-food-facts/files")
@@ -20,18 +23,32 @@ public class OpenFoodFactsFileController {
     @Autowired
     private FileDeltaImporterService fileImporterService;
 
+    /**
+     * Gets the delta files exposed by the openfoodfacts API.
+     * @return a list of file info
+     */
     @GetMapping(value = "/delta")
     public ResponseEntity<List<OpenFoodFactsFileDTO>> getOpenFoodFactsDataDeltaFiles(){
 
         return new ResponseEntity(fileImporterService.saveOpenFoodFactsFileDelta(), HttpStatus.OK);
     }
 
+    /**
+     * Gets the openfoodfacts file data in the database.
+     * @param input the sreach criterias
+     * @return a list of openfoodfacts file data
+     */
     @PostMapping(value = "/find")
     public ResponseEntity<List<OpenFoodFactsFileDTO>> findOpenFoodFactsFiles(@RequestBody OpenFoodFactsImportInputDTO input){
 
         return new ResponseEntity(fileImporterService.findOpenFoodFactsFiles(input), HttpStatus.OK);
     }
 
+    /**
+     * Tiggers import for all the files using given criterias.
+     * @param input the file criterias
+     * @return a list of files that will be imported
+     */
     @PostMapping(value = "/import")
     public ResponseEntity<List<OpenFoodFactsFileDTO>> importOpenFoodFactsDataDeltaFiles(@RequestBody OpenFoodFactsImportInputDTO input){
 
