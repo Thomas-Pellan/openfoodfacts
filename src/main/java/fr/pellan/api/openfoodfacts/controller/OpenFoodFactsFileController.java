@@ -37,7 +37,7 @@ public class OpenFoodFactsFileController {
     @ApiResponse(responseCode = "200", description = "Success")
     public ResponseEntity<List<OpenFoodFactsFileDTO>> getOpenFoodFactsDataDeltaFiles(){
 
-        return new ResponseEntity(fileImporterService.saveOpenFoodFactsFileDelta(), HttpStatus.OK);
+        return new ResponseEntity<>(fileImporterService.saveOpenFoodFactsFileDelta(), HttpStatus.OK);
     }
 
     /**
@@ -52,7 +52,7 @@ public class OpenFoodFactsFileController {
     @ApiResponse(responseCode = "500", description = "An error occuried")
     public ResponseEntity<List<OpenFoodFactsFileDTO>> findOpenFoodFactsFiles(@RequestBody OpenFoodFactsImportInputDTO input){
 
-        return new ResponseEntity(fileImporterService.findOpenFoodFactsFiles(input), HttpStatus.OK);
+        return new ResponseEntity<>(fileImporterService.findOpenFoodFactsFiles(input), HttpStatus.OK);
     }
 
     /**
@@ -68,14 +68,14 @@ public class OpenFoodFactsFileController {
     public ResponseEntity<List<OpenFoodFactsFileDTO>> importOpenFoodFactsDataDeltaFiles(@RequestBody OpenFoodFactsImportInputDTO input){
 
         if(input == null || input.getStatus() == null) {
-            return new ResponseEntity(false, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         if(OpenFoodFactsFileStatus.IMPORT_STARTED == input.getStatus()){
             log.error("importOpenFoodFactsDataDeltaFiles : can't import something that's already stared (for now)");
-            return new ResponseEntity(false, HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        return new ResponseEntity(fileImporterService.importAllFilesWithStatus(input), HttpStatus.OK);
+        return new ResponseEntity<>(fileImporterService.importAllFilesWithStatus(input), HttpStatus.OK);
     }
 }

@@ -25,6 +25,6 @@ public class HeathController {
     @ApiResponse(responseCode = "200", description = "The app is up, hurray !")
     public ResponseEntity<String> getFileImport(){
 
-        return new ResponseEntity("UP",HttpStatus.OK);
+        return new ResponseEntity<>("UP",HttpStatus.OK);
     }
 }

@@ -39,8 +39,11 @@ public class QueryUtil {
         try {
             response = client.send(request,
                     HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             log.error(e.getMessage(), e);
+            throw new QueryUtilException(e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new QueryUtilException(e.getMessage());
         }
 
@@ -71,8 +74,11 @@ public class QueryUtil {
         try {
             response = client.send(request,
                     HttpResponse.BodyHandlers.ofInputStream());
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             log.error(e.getMessage(), e);
+            throw new QueryUtilException(e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new QueryUtilException(e.getMessage());
         }
 

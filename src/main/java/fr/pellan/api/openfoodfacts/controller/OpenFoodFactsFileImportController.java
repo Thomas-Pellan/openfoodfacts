@@ -40,7 +40,7 @@ public class OpenFoodFactsFileImportController {
     @ApiResponse(responseCode = "500", description = "An error occuried")
     public ResponseEntity<OpenFoodFactsFileImportDTO> getFileImport(@RequestParam(value = "fileImportId") Long  fileImportId){
 
-        return new ResponseEntity(fileImportService.findById(fileImportId), HttpStatus.OK);
+        return new ResponseEntity<>(fileImportService.findById(fileImportId), HttpStatus.OK);
     }
 
     /**
@@ -55,7 +55,7 @@ public class OpenFoodFactsFileImportController {
     @ApiResponse(responseCode = "500", description = "An error occuried")
     public ResponseEntity<OpenFoodFactsFileImportDTO> getFileCurrentStatus(@RequestParam(value = "fileId") Long  fileId){
 
-        return new ResponseEntity(fileImportService.findLastByFileId(fileId), HttpStatus.OK);
+        return new ResponseEntity<>(fileImportService.findLastByFileId(fileId), HttpStatus.OK);
     }
 
     /**
@@ -70,6 +70,6 @@ public class OpenFoodFactsFileImportController {
     @ApiResponse(responseCode = "500", description = "An error occuried")
     public ResponseEntity<List<OpenFoodFactsFileImportDTO>> getFileImportStatusHistory(@RequestParam(value = "fileId") Long  fileId){
 
-        return new ResponseEntity(fileImportService.findByFileId(fileId), HttpStatus.OK);
+        return new ResponseEntity<>(fileImportService.findByFileId(fileId), HttpStatus.OK);
     }
 }

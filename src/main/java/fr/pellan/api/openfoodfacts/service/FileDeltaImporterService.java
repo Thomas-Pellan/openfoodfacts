@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public class FileDeltaImporterService {
 
         String files = queryUtil.getDataAsString(openFoodApiConfig.getStaticDataFilesUrl() + INDEX_URL);
         if (StringUtils.isBlank(files)) {
-            return null;
+            return new String[0];
         }
 
         return files.split(openFoodApiConfig.getFileSeparator());
